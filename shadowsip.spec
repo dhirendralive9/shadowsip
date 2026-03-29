@@ -81,7 +81,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon="resources/icons/shadowsip.ico" if is_windows else None,
+    icon="resources/icons/shadowsip.ico" if is_windows and os.path.exists("resources/icons/shadowsip.ico") else None,
 )
 
 coll = COLLECT(
