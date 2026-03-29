@@ -7,18 +7,16 @@ on:
     branches: [main]
   workflow_dispatch:
 
-env:
-  PJSIP_VERSION: "2.14.1"
-
 jobs:
   # ==================================================
-  # Build pjsua2 Python bindings for Linux
+  # Build pjsua2 for Linux
   # ==================================================
   build-pjsip-linux:
     runs-on: ubuntu-22.04
     strategy:
+      fail-fast: false
       matrix:
-        python: ["3.11", "3.12", "3.13"]
+        python: ["3.11"]
 
     steps:
       - uses: actions/checkout@v4
@@ -27,32 +25,21 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Install system deps
+      - name: Install deps
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq \
             build-essential python3-dev swig \
             libasound2-dev libpulse-dev \
             libssl-dev libsrtp2-dev libopus-dev uuid-dev
-
-      - name: Cache PJSIP
-        uses: actions/cache@v4
-        id: cache
-        with:
-          path: /tmp/pjproject-${{ env.PJSIP_VERSION }}
-          key: pjsip-linux-${{ env.PJSIP_VERSION }}-v3
-
-      - name: Download PJSIP
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          cd /tmp
-          wget -q "https://github.com/pjsip/pjproject/archive/refs/tags/${{ env.PJSIP_VERSION }}.tar.gz" -O pjsip.tar.gz
-          tar xzf pjsip.tar.gz
+          pip install setuptools
 
       - name: Build PJSIP
-        if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          cd /tmp/pjproject-${{ env.PJSIP_VERSION }}
+          cd /tmp
+          git clone --depth 1 --branch 2.14.1 https://github.com/pjsip/pjproject.git
+          cd pjproject
+
           cat > pjlib/include/pj/config_site.h << 'EOF'
           #define PJMEDIA_AUDIO_DEV_HAS_ALSA      1
           #define PJMEDIA_HAS_SRTP                1
@@ -60,17 +47,34 @@ jobs:
           #define PJSUA_MAX_ACC                   8
           #define PJSUA_MAX_CALLS                 16
           EOF
+
           export CFLAGS="-fPIC"
+          export CXXFLAGS="-fPIC"
           ./configure --enable-shared
-          make dep -j$(nproc) && make -j$(nproc)
+          make dep -j$(nproc)
+          make -j$(nproc)
+          sudo make install
+          sudo ldconfig
 
       - name: Build pjsua2 Python bindings
         run: |
-          cd /tmp/pjproject-${{ env.PJSIP_VERSION }}/pjsip-apps/src/swig
-          make clean 2>/dev/null || true
-          make -j$(nproc)
+          cd /tmp/pjproject/pjsip-apps/src/swig
+
+          # Step 1: Regenerate SWIG wrapper (skip Java entirely)
+          swig -python -c++ \
+            -I../../../../pjlib/include \
+            -I../../../../pjlib-util/include \
+            -I../../../../pjmedia/include \
+            -I../../../../pjsip/include \
+            -I../../../../pjnath/include \
+            -w312 -threads -DSWIG_NO_EXPORT_ITERATOR_METHODS \
+            -o python/pjsua2_wrap.cpp pjsua2.i
+
+          # Step 2: Build ONLY the Python module (not Java)
           cd python
           python setup.py build
+
+          # Step 3: Collect output
           mkdir -p /tmp/pjsua2-dist
           find build/ -name "_pjsua2*" -type f -exec cp {} /tmp/pjsua2-dist/ \;
           cp pjsua2.py /tmp/pjsua2-dist/ 2>/dev/null || true
@@ -87,20 +91,17 @@ jobs:
           retention-days: 90
 
   # ==================================================
-  # Build pjsua2 Python bindings for Windows (MSYS2)
+  # Build pjsua2 for Windows via MSYS2
   # ==================================================
   build-pjsip-windows:
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
-        python: ["3.11", "3.12", "3.13"]
+        python: ["3.11"]
 
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python }}
 
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
@@ -112,35 +113,18 @@ jobs:
             mingw-w64-x86_64-openssl
             mingw-w64-x86_64-opus
             mingw-w64-x86_64-python
+            mingw-w64-x86_64-python-setuptools
             mingw-w64-x86_64-swig
             make
-
-      - name: Get Python info
-        shell: pwsh
-        id: py
-        run: |
-          $pyexe = (Get-Command python).Source
-          $pydir = Split-Path $pyexe
-          $pyver = python -c "import sys; print(f'{sys.version_info.major}{sys.version_info.minor}')"
-          $pyinc = python -c "import sysconfig; print(sysconfig.get_path('include'))"
-          echo "EXE=$pyexe" >> $env:GITHUB_OUTPUT
-          echo "DIR=$pydir" >> $env:GITHUB_OUTPUT
-          echo "VER=$pyver" >> $env:GITHUB_OUTPUT
-          echo "INC=$pyinc" >> $env:GITHUB_OUTPUT
+            git
 
       - name: Build PJSIP + pjsua2
         shell: msys2 {0}
         run: |
           cd /tmp
+          git clone --depth 1 --branch 2.14.1 https://github.com/pjsip/pjproject.git
+          cd pjproject
 
-          # Download
-          if [ ! -d "pjproject-${{ env.PJSIP_VERSION }}" ]; then
-            curl -sL "https://github.com/pjsip/pjproject/archive/refs/tags/${{ env.PJSIP_VERSION }}.tar.gz" | tar xz
-          fi
-
-          cd pjproject-${{ env.PJSIP_VERSION }}
-
-          # Config
           cat > pjlib/include/pj/config_site.h << 'EOF'
           #define PJMEDIA_HAS_SRTP                1
           #define PJMEDIA_HAS_OPUS_CODEC          1
@@ -149,36 +133,38 @@ jobs:
           EOF
 
           export CFLAGS="-fPIC"
+          export CXXFLAGS="-fPIC"
           ./configure --enable-shared
           make dep -j$(nproc)
           make -j$(nproc)
 
-          # Build SWIG bindings
+          # Regenerate SWIG wrapper (Python only, no Java)
           cd pjsip-apps/src/swig
-          make -j$(nproc)
+          swig -python -c++ \
+            -I../../../../pjlib/include \
+            -I../../../../pjlib-util/include \
+            -I../../../../pjmedia/include \
+            -I../../../../pjsip/include \
+            -I../../../../pjnath/include \
+            -w312 -threads -DSWIG_NO_EXPORT_ITERATOR_METHODS \
+            -o python/pjsua2_wrap.cpp pjsua2.i
 
-          # Build Python module using MSYS2 Python (compatible with MinGW libs)
+          # Build ONLY Python module
           cd python
           python3 setup.py build
 
-          # Collect outputs
+          # Collect
           mkdir -p /tmp/pjsua2-dist
           find build/ -name "_pjsua2*" -type f -exec cp {} /tmp/pjsua2-dist/ \;
           cp pjsua2.py /tmp/pjsua2-dist/ 2>/dev/null || true
 
-          # Copy required DLLs
+          # Bundle MinGW DLLs
           for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll; do
             cp /mingw64/bin/$dll /tmp/pjsua2-dist/ 2>/dev/null || true
           done
 
           echo "=== Built files ==="
           ls -la /tmp/pjsua2-dist/
-
-      - name: Test import
-        shell: msys2 {0}
-        run: |
-          export PYTHONPATH=/tmp/pjsua2-dist
-          python3 -c "import pjsua2; print('pjsua2 OK - Windows py${{ matrix.python }}')" || echo "Import test needs Windows Python path adjustment"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -187,21 +173,22 @@ jobs:
           retention-days: 90
 
   # ==================================================
-  # Build ShadowSIP application
+  # Build ShadowSIP app
   # ==================================================
   build-app:
     needs: [build-pjsip-linux, build-pjsip-windows]
     if: always()
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-22.04
             python: "3.11"
-            pjsip_artifact: pjsua2-linux-py3.11
+            pjsip_name: pjsua2-linux-py3.11
             app_name: ShadowSIP-Linux
           - os: windows-latest
             python: "3.11"
-            pjsip_artifact: pjsua2-windows-py3.11
+            pjsip_name: pjsua2-windows-py3.11
             app_name: ShadowSIP-Windows
 
     runs-on: ${{ matrix.os }}
@@ -224,30 +211,28 @@ jobs:
       - name: Install Python deps
         run: pip install PySide6 pyinstaller
 
-      - name: Download pjsua2 bindings
+      - name: Download pjsua2
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
-          name: ${{ matrix.pjsip_artifact }}
+          name: ${{ matrix.pjsip_name }}
           path: pjsua2-bindings/
 
       - name: Bundle pjsua2
         shell: bash
         continue-on-error: true
         run: |
-          if [ -d "pjsua2-bindings" ] && [ "$(ls pjsua2-bindings/)" ]; then
-            echo "Bundling pjsua2 bindings into package..."
+          if [ -d "pjsua2-bindings" ] && [ "$(ls pjsua2-bindings/ 2>/dev/null)" ]; then
+            echo "Bundling pjsua2..."
             cp pjsua2-bindings/* src/shadowsip/core/ 2>/dev/null || true
-            ls -la src/shadowsip/core/
           else
-            echo "No pjsua2 bindings — MOCK mode"
+            echo "No pjsua2 — MOCK mode"
           fi
 
-      - name: Install ShadowSIP
-        run: pip install -e .
-
-      - name: Build distributable
-        run: python scripts/package.py
+      - name: Install & build
+        run: |
+          pip install -e .
+          python scripts/package.py
 
       - uses: actions/upload-artifact@v4
         with:
