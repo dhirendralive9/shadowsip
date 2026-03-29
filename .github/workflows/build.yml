@@ -8,9 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ==================================================
-  # Build pjsua2 for Linux
-  # ==================================================
   build-pjsip-linux:
     runs-on: ubuntu-22.04
     strategy:
@@ -20,7 +17,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
@@ -39,7 +35,6 @@ jobs:
           cd /tmp
           git clone --depth 1 --branch 2.14.1 https://github.com/pjsip/pjproject.git
           cd pjproject
-
           cat > pjlib/include/pj/config_site.h << 'EOF'
           #define PJMEDIA_AUDIO_DEV_HAS_ALSA      1
           #define PJMEDIA_HAS_SRTP                1
@@ -47,7 +42,6 @@ jobs:
           #define PJSUA_MAX_ACC                   8
           #define PJSUA_MAX_CALLS                 16
           EOF
-
           export CFLAGS="-fPIC"
           export CXXFLAGS="-fPIC"
           ./configure --enable-shared
@@ -58,23 +52,24 @@ jobs:
 
       - name: Build pjsua2 Python bindings
         run: |
-          cd /tmp/pjproject/pjsip-apps/src/swig
+          PJ=/tmp/pjproject
+          cd $PJ/pjsip-apps/src/swig
 
-          # Step 1: Regenerate SWIG wrapper (skip Java entirely)
+          # Regenerate SWIG wrapper with absolute paths
           swig -python -c++ \
-            -I../../../../pjlib/include \
-            -I../../../../pjlib-util/include \
-            -I../../../../pjmedia/include \
-            -I../../../../pjsip/include \
-            -I../../../../pjnath/include \
+            -I${PJ}/pjlib/include \
+            -I${PJ}/pjlib-util/include \
+            -I${PJ}/pjmedia/include \
+            -I${PJ}/pjsip/include \
+            -I${PJ}/pjnath/include \
             -w312 -threads -DSWIG_NO_EXPORT_ITERATOR_METHODS \
             -o python/pjsua2_wrap.cpp pjsua2.i
 
-          # Step 2: Build ONLY the Python module (not Java)
+          # Build Python module only
           cd python
           python setup.py build
 
-          # Step 3: Collect output
+          # Collect
           mkdir -p /tmp/pjsua2-dist
           find build/ -name "_pjsua2*" -type f -exec cp {} /tmp/pjsua2-dist/ \;
           cp pjsua2.py /tmp/pjsua2-dist/ 2>/dev/null || true
@@ -90,9 +85,6 @@ jobs:
           path: /tmp/pjsua2-dist/
           retention-days: 90
 
-  # ==================================================
-  # Build pjsua2 for Windows via MSYS2
-  # ==================================================
   build-pjsip-windows:
     runs-on: windows-latest
     strategy:
@@ -102,7 +94,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
         with:
@@ -124,6 +115,7 @@ jobs:
           cd /tmp
           git clone --depth 1 --branch 2.14.1 https://github.com/pjsip/pjproject.git
           cd pjproject
+          PJ=$(pwd)
 
           cat > pjlib/include/pj/config_site.h << 'EOF'
           #define PJMEDIA_HAS_SRTP                1
@@ -138,32 +130,27 @@ jobs:
           make dep -j$(nproc)
           make -j$(nproc)
 
-          # Regenerate SWIG wrapper (Python only, no Java)
+          # SWIG with absolute paths
           cd pjsip-apps/src/swig
           swig -python -c++ \
-            -I../../../../pjlib/include \
-            -I../../../../pjlib-util/include \
-            -I../../../../pjmedia/include \
-            -I../../../../pjsip/include \
-            -I../../../../pjnath/include \
+            -I${PJ}/pjlib/include \
+            -I${PJ}/pjlib-util/include \
+            -I${PJ}/pjmedia/include \
+            -I${PJ}/pjsip/include \
+            -I${PJ}/pjnath/include \
             -w312 -threads -DSWIG_NO_EXPORT_ITERATOR_METHODS \
             -o python/pjsua2_wrap.cpp pjsua2.i
 
-          # Build ONLY Python module
           cd python
           python3 setup.py build
 
-          # Collect
           mkdir -p /tmp/pjsua2-dist
           find build/ -name "_pjsua2*" -type f -exec cp {} /tmp/pjsua2-dist/ \;
           cp pjsua2.py /tmp/pjsua2-dist/ 2>/dev/null || true
 
-          # Bundle MinGW DLLs
           for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll; do
             cp /mingw64/bin/$dll /tmp/pjsua2-dist/ 2>/dev/null || true
           done
-
-          echo "=== Built files ==="
           ls -la /tmp/pjsua2-dist/
 
       - uses: actions/upload-artifact@v4
@@ -172,9 +159,6 @@ jobs:
           path: C:\msys64\tmp\pjsua2-dist\
           retention-days: 90
 
-  # ==================================================
-  # Build ShadowSIP app
-  # ==================================================
   build-app:
     needs: [build-pjsip-linux, build-pjsip-windows]
     if: always()
@@ -195,7 +179,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
@@ -223,7 +206,6 @@ jobs:
         continue-on-error: true
         run: |
           if [ -d "pjsua2-bindings" ] && [ "$(ls pjsua2-bindings/ 2>/dev/null)" ]; then
-            echo "Bundling pjsua2..."
             cp pjsua2-bindings/* src/shadowsip/core/ 2>/dev/null || true
           else
             echo "No pjsua2 — MOCK mode"
