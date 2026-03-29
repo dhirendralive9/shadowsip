@@ -44,6 +44,15 @@ def build():
         print(f"ERROR: Spec file not found: {spec_file}")
         sys.exit(1)
 
+    # Ensure resource directories exist (even if empty)
+    for subdir in ["icons", "ringtones", "translations"]:
+        d = os.path.join(PROJECT_ROOT, "resources", subdir)
+        os.makedirs(d, exist_ok=True)
+        # Create .gitkeep so PyInstaller doesn't complain about empty dirs
+        gitkeep = os.path.join(d, ".gitkeep")
+        if not os.listdir(d):
+            open(gitkeep, "a").close()
+
     print("=" * 50)
     print(" ShadowSIP — Building Distributable")
     print("=" * 50)

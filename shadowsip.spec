@@ -13,6 +13,15 @@ block_cipher = None
 is_windows = sys.platform == "win32"
 is_linux = sys.platform.startswith("linux")
 
+# Collect resource directories (skip if missing)
+_resource_dirs = [
+    ("resources/icons", "resources/icons"),
+    ("resources/themes", "resources/themes"),
+    ("resources/ringtones", "resources/ringtones"),
+    ("resources/translations", "resources/translations"),
+]
+_datas = [(src, dst) for src, dst in _resource_dirs if os.path.isdir(src)]
+
 a = Analysis(
     ["src/shadowsip/main.py"],
     pathex=[],
@@ -21,12 +30,7 @@ a = Analysis(
         # Windows: ("path/to/pjsua2.pyd", "."),
         # Linux: ("path/to/pjsua2.so", "."),
     ],
-    datas=[
-        ("resources/icons", "resources/icons"),
-        ("resources/themes", "resources/themes"),
-        ("resources/ringtones", "resources/ringtones"),
-        ("resources/translations", "resources/translations"),
-    ],
+    datas=_datas,
     hiddenimports=[
         "PySide6.QtSvg",
         "PySide6.QtSvgWidgets",
