@@ -392,18 +392,14 @@ class DialerPage(QWidget):
         self.ext_grid = QGridLayout()
         self.ext_grid.setSpacing(7)
 
-        # Demo extensions (will be populated from SIP presence in Phase 2)
-        demo_exts = [
-            ("2001", "Dhirendra", "online"),
-            ("2002", "Agent A", "busy"),
-            ("2003", "Agent B", "offline"),
-        ]
+        # Empty — populated from SIP presence when extensions register
         self._ext_cards = []
-        for i, (ext, name, status) in enumerate(demo_exts):
-            card = ExtensionCard(ext, name, status)
-            card.clicked.connect(self._on_ext_clicked)
-            self.ext_grid.addWidget(card, 0, i)
-            self._ext_cards.append(card)
+
+        # Placeholder when no extensions
+        self.ext_placeholder = QLabel("No extensions online")
+        self.ext_placeholder.setObjectName("callMeta")
+        self.ext_placeholder.setAlignment(Qt.AlignCenter)
+        right_layout.addWidget(self.ext_placeholder)
 
         right_layout.addLayout(self.ext_grid)
 
@@ -418,17 +414,11 @@ class DialerPage(QWidget):
         self.call_list_layout.setContentsMargins(0, 0, 0, 0)
         self.call_list_layout.setSpacing(2)
 
-        # Demo call history (will be populated from SQLite in Phase 1.3)
-        demo_calls = [
-            ("+91 98765 43210", "outbound", "4m 32s", "2m"),
-            ("SignalWire Trunk", "inbound", "12m 05s", "18m"),
-            ("+1 212 555 0199", "missed", "Ring group 601", "1h"),
-            ("2002", "outbound", "1m 15s", "3h"),
-        ]
-        for number, direction, duration, time_ago in demo_calls:
-            entry = CallHistoryEntry(number, direction, duration, time_ago)
-            entry.call_clicked.connect(self._on_history_call)
-            self.call_list_layout.addWidget(entry)
+        # Empty — populated from SQLite call history
+        self.calls_placeholder = QLabel("No recent calls")
+        self.calls_placeholder.setObjectName("callMeta")
+        self.calls_placeholder.setAlignment(Qt.AlignCenter)
+        self.call_list_layout.addWidget(self.calls_placeholder)
 
         self.call_list_layout.addStretch()
 

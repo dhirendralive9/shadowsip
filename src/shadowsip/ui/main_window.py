@@ -115,13 +115,16 @@ class Sidebar(QWidget):
         layout.addWidget(self.settings_btn, alignment=Qt.AlignHCenter)
         layout.addSpacing(8)
 
-        # User avatar
-        self.avatar_btn = QPushButton("DK")
-        self.avatar_btn.setObjectName("avatarButton")
-        self.avatar_btn.setFixedSize(34, 34)
-        self.avatar_btn.setCursor(Qt.PointingHandCursor)
-        self.avatar_btn.setToolTip("Account")
-        layout.addWidget(self.avatar_btn, alignment=Qt.AlignHCenter)
+        # Website link (globe icon)
+        self.website_btn = QPushButton()
+        self.website_btn.setObjectName("avatarButton")
+        self.website_btn.setFixedSize(34, 34)
+        self.website_btn.setCursor(Qt.PointingHandCursor)
+        self.website_btn.setToolTip("shadowpbx.com")
+        self.website_btn.setIcon(get_icon("globe", color="#0D7C5F", size=18, stroke_width=1.8))
+        self.website_btn.setIconSize(QSize(18, 18))
+        self.website_btn.clicked.connect(self._open_website)
+        layout.addWidget(self.website_btn, alignment=Qt.AlignHCenter)
 
         # Set first button active
         if self.nav_buttons:
@@ -136,18 +139,21 @@ class Sidebar(QWidget):
     def _on_theme_toggle(self):
         """Handle theme toggle and update button icon."""
         self.theme_toggle_requested.emit()
-        # Swap icon based on which theme we just switched TO
-        # After toggle, check the app controller's current theme
-        # For now, just alternate the icon
-        current_icon = self.theme_btn.toolTip()
-        if "light" not in str(self.theme_btn.property("currentIcon") or "sun"):
-            self.theme_btn.setIcon(
-                get_icon("sun", color="#C48A1A", size=16, stroke_width=2))
-            self.theme_btn.setProperty("currentIcon", "sun")
-        else:
+        current_icon = self.theme_btn.property("currentIcon") or "sun"
+        if current_icon == "sun":
             self.theme_btn.setIcon(
                 get_icon("moon", color="#60A5FA", size=16, stroke_width=2))
             self.theme_btn.setProperty("currentIcon", "moon")
+        else:
+            self.theme_btn.setIcon(
+                get_icon("sun", color="#C48A1A", size=16, stroke_width=2))
+            self.theme_btn.setProperty("currentIcon", "sun")
+
+    def _open_website(self):
+        """Open ShadowPBX website."""
+        from PySide6.QtGui import QDesktopServices
+        from PySide6.QtCore import QUrl
+        QDesktopServices.openUrl(QUrl("https://shadowpbx.com/"))
 
     def set_active(self, index: int):
         """Programmatically set active navigation page."""

@@ -360,3 +360,126 @@ QLabel#placeholderPage {
     color: #4E5266;
     font-size: 16px;
 }
+
+/* === Dialogs & Forms === */
+QDialog {
+    background: #171A21;
+    color: #E4E6EB;
+}
+
+QTabWidget::pane {
+    border: 1px solid rgba(255,255,255,0.05);
+    background: #171A21;
+    border-radius: 8px;
+}
+QTabBar::tab {
+    background: transparent;
+    color: #8B8FA3;
+    padding: 8px 20px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-weight: 500;
+}
+QTabBar::tab:selected {
+    color: #2DD4BF;
+    border-bottom: 2px solid #2DD4BF;
+}
+QTabBar::tab:hover {
+    color: #E4E6EB;
+}
+
+QListWidget {
+    background: #1D2029;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    color: #E4E6EB;
+    outline: none;
+}
+QListWidget::item {
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+QListWidget::item:selected {
+    background: rgba(45,212,191,0.1);
+    color: #2DD4BF;
+}
+QListWidget::item:hover {
+    background: #242833;
+}
+
+QLineEdit, QSpinBox {
+    background: #1D2029;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #E4E6EB;
+    font-size: 13px;
+}
+QLineEdit:focus, QSpinBox:focus {
+    border-color: #2DD4BF;
+}
+
+QComboBox {
+    background: #1D2029;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #E4E6EB;
+}
+QComboBox::drop-down {
+    border: none;
+    width: 24px;
+}
+QComboBox QAbstractItemView {
+    background: #1D2029;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #E4E6EB;
+    selection-background-color: rgba(45,212,191,0.1);
+    selection-color: #2DD4BF;
+}
+
+QCheckBox {
+    color: #E4E6EB;
+    spacing: 8px;
+}
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: #1D2029;
+}
+QCheckBox::indicator:checked {
+    background: #2DD4BF;
+    border-color: #2DD4BF;
+}
+
+QGroupBox {
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    margin-top: 16px;
+    padding-top: 20px;
+    color: #E4E6EB;
+    font-weight: 500;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 6px;
+    color: #8B8FA3;
+}
+
+QLabel#formTitle {
+    color: #E4E6EB;
+}
+
+QPushButton#eyeButton {
+    background: transparent;
+    border: none;
+    color: #4E5266;
+    font-size: 14px;
+    padding: 4px;
+}
+QPushButton#eyeButton:hover {
+    color: #E4E6EB;
+}

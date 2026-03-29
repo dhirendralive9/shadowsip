@@ -56,10 +56,25 @@ class AccountForm(QWidget):
         self.sip_domain.setPlaceholderText("pbx.webtobuzz.com")
         form.addRow("SIP Domain:", self.sip_domain)
 
+        # Password with eye toggle
+        pw_layout = QHBoxLayout()
+        pw_layout.setSpacing(4)
         self.sip_password = QLineEdit()
         self.sip_password.setEchoMode(QLineEdit.Password)
         self.sip_password.setPlaceholderText("••••••••")
-        form.addRow("Password:", self.sip_password)
+        pw_layout.addWidget(self.sip_password)
+
+        self.eye_btn = QPushButton("👁")
+        self.eye_btn.setObjectName("eyeButton")
+        self.eye_btn.setFixedSize(32, 32)
+        self.eye_btn.setCursor(Qt.PointingHandCursor)
+        self.eye_btn.setToolTip("Show/hide password")
+        self.eye_btn.clicked.connect(self._toggle_password)
+        pw_layout.addWidget(self.eye_btn)
+
+        pw_widget = QWidget()
+        pw_widget.setLayout(pw_layout)
+        form.addRow("Password:", pw_widget)
 
         self.auth_user = QLineEdit()
         self.auth_user.setPlaceholderText("(same as username if blank)")
@@ -147,6 +162,17 @@ class AccountForm(QWidget):
         # Populate if editing
         if account_data:
             self._populate(account_data)
+
+    def _toggle_password(self):
+        """Toggle password visibility."""
+        if self.sip_password.echoMode() == QLineEdit.Password:
+            self.sip_password.setEchoMode(QLineEdit.Normal)
+            self.eye_btn.setText("🔒")
+            self.eye_btn.setToolTip("Hide password")
+        else:
+            self.sip_password.setEchoMode(QLineEdit.Password)
+            self.eye_btn.setText("👁")
+            self.eye_btn.setToolTip("Show password")
 
     def _populate(self, data: dict):
         """Fill form from account data."""
