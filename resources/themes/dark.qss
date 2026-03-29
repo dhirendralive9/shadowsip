@@ -1,0 +1,362 @@
+/* ============================================
+   ShadowSIP — Dark Theme (Slate Pro)
+   Font: Plus Jakarta Sans | Accent: #2DD4BF
+   ============================================ */
+
+/* === Global === */
+QWidget {
+    font-family: "Plus Jakarta Sans", "Segoe UI", "Ubuntu", sans-serif;
+    font-size: 13px;
+    color: #E4E6EB;
+    background: transparent;
+}
+
+QMainWindow#mainWindow {
+    background: #111318;
+}
+
+/* === Sidebar === */
+QWidget#sidebar {
+    background: #111318;
+    border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+QPushButton#logoButton {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2DD4BF, stop:1 #0D9488);
+    border: none;
+    border-radius: 10px;
+    color: #111318;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+QPushButton#sidebarButton {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: #4E5266;
+    font-size: 18px;
+    padding: 0;
+}
+QPushButton#sidebarButton:hover {
+    background: #1D2029;
+    color: #8B8FA3;
+}
+QPushButton#sidebarButton:checked {
+    background: rgba(45,212,191,0.1);
+    color: #2DD4BF;
+}
+
+QPushButton#themeToggleButton {
+    background: #1D2029;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    font-size: 14px;
+    color: #60A5FA;
+}
+
+QPushButton#avatarButton {
+    background: #1D2029;
+    border: 2px solid #2DD4BF;
+    border-radius: 17px;
+    color: #2DD4BF;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* === Top Bar === */
+QWidget#topBar {
+    background: #171A21;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+QLabel#appName {
+    font-size: 16px;
+    font-weight: 700;
+    color: #E4E6EB;
+    letter-spacing: -0.5px;
+}
+
+QLabel#statusBadge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: rgba(45,212,191,0.1);
+    color: #2DD4BF;
+    letter-spacing: 0.5px;
+}
+QLabel#statusBadge[status="offline"] {
+    background: #1D2029;
+    color: #4E5266;
+}
+QLabel#statusBadge[status="trying"] {
+    background: rgba(251,191,36,0.1);
+    color: #FBBF24;
+}
+QLabel#statusBadge[status="error"] {
+    background: rgba(248,113,113,0.1);
+    color: #F87171;
+}
+
+QLabel#accountLabel {
+    font-size: 11px;
+    color: #4E5266;
+    font-family: "Fira Code", "JetBrains Mono", "Consolas", monospace;
+}
+
+QLabel#onlineDot {
+    background: #4E5266;
+    border-radius: 4px;
+}
+QLabel#onlineDot[state="online"] {
+    background: #2DD4BF;
+}
+
+/* === Separator === */
+QFrame#separator, QFrame#verticalSep {
+    background: rgba(255,255,255,0.05);
+    border: none;
+}
+
+/* === Dialer Panel === */
+QWidget#dialerPanel {
+    background: #171A21;
+    border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+QWidget#numberInput {
+    background: #1D2029;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+QWidget#numberInput:hover {
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+QLineEdit#numberField {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: #E4E6EB;
+    font-family: "Fira Code", "JetBrains Mono", "Consolas", monospace;
+}
+
+QPushButton#clearButton {
+    background: transparent;
+    border: none;
+    color: #4E5266;
+    font-size: 18px;
+    border-radius: 12px;
+}
+QPushButton#clearButton:hover {
+    background: rgba(255,255,255,0.06);
+    color: #E4E6EB;
+}
+
+/* === Dial Pad Keys === */
+QPushButton#dialpadKey {
+    background: #1D2029;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 4px 0;
+}
+QPushButton#dialpadKey:hover {
+    background: #242833;
+    border-color: rgba(255,255,255,0.1);
+}
+QPushButton#dialpadKey:pressed {
+    background: rgba(45,212,191,0.08);
+    border-color: rgba(45,212,191,0.3);
+}
+
+QLabel#keyDigit {
+    font-size: 20px;
+    font-weight: 600;
+    color: #E4E6EB;
+    background: transparent;
+}
+QLabel#keySub {
+    font-size: 9px;
+    font-weight: 500;
+    color: #4E5266;
+    letter-spacing: 2px;
+    background: transparent;
+}
+
+/* === Call Button === */
+QPushButton#callButton {
+    background: #2DD4BF;
+    border: none;
+    border-radius: 8px;
+    color: #111318;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px;
+    letter-spacing: 0.3px;
+}
+QPushButton#callButton:hover {
+    background: #34E0CA;
+}
+QPushButton#callButton:pressed {
+    background: #26B8A5;
+}
+
+/* === Quick Actions === */
+QPushButton#quickActionCircle {
+    background: #1D2029;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 19px;
+}
+QPushButton#quickActionCircle:hover {
+    background: #242833;
+    border-color: rgba(255,255,255,0.12);
+}
+QPushButton#quickActionCircle:checked {
+    background: rgba(45,212,191,0.1);
+    border-color: rgba(45,212,191,0.3);
+}
+QPushButton#quickActionCircle[actionId="dnd"] {
+    background: rgba(248,113,113,0.1);
+    border-color: rgba(248,113,113,0.2);
+}
+QPushButton#quickActionCircle[actionId="dnd"]:checked {
+    background: #F87171;
+    border-color: #F87171;
+}
+QPushButton#quickActionCircle[actionId="auto"] {
+    background: rgba(251,191,36,0.1);
+    border-color: rgba(251,191,36,0.2);
+}
+QPushButton#quickActionCircle[actionId="auto"]:checked {
+    background: #FBBF24;
+    border-color: #FBBF24;
+}
+
+QLabel#quickActionLabel {
+    font-size: 9px;
+    font-weight: 600;
+    color: #8B8FA3;
+}
+
+/* === Right Panel === */
+QWidget#rightPanel {
+    background: #171A21;
+}
+
+QLabel#sectionTitle {
+    font-size: 10px;
+    font-weight: 700;
+    color: #4E5266;
+    letter-spacing: 1.5px;
+}
+
+/* === Extension Cards === */
+QWidget#extensionCard {
+    background: #1D2029;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+}
+QWidget#extensionCard:hover {
+    border-color: rgba(45,212,191,0.3);
+    background: rgba(45,212,191,0.06);
+}
+
+QLabel#extDot {
+    border-radius: 4px;
+    background: #4E5266;
+}
+QLabel#extDot[state="online"] { background: #2DD4BF; }
+QLabel#extDot[state="busy"] { background: #F87171; }
+QLabel#extDot[state="offline"] { background: #4E5266; }
+
+QLabel#extNumber {
+    font-size: 14px;
+    font-weight: 700;
+    color: #E4E6EB;
+    font-family: "Fira Code", "JetBrains Mono", "Consolas", monospace;
+}
+QLabel#extName {
+    font-size: 10px;
+    color: #8B8FA3;
+}
+
+/* === Call History === */
+QWidget#callEntry {
+    background: transparent;
+    border-radius: 8px;
+}
+QWidget#callEntry:hover {
+    background: #1D2029;
+}
+
+QLabel#callArrow {
+    font-size: 16px;
+    font-weight: 700;
+    background: transparent;
+}
+QLabel#callArrow[direction="outbound"] { color: #2DD4BF; }
+QLabel#callArrow[direction="inbound"] { color: #60A5FA; }
+QLabel#callArrow[direction="missed"] { color: #F87171; }
+
+QLabel#callNumber {
+    font-size: 13px;
+    font-weight: 600;
+    color: #E4E6EB;
+}
+QLabel#callMeta {
+    font-size: 10px;
+    color: #4E5266;
+}
+QLabel#callTime {
+    font-size: 10px;
+    color: #4E5266;
+    font-family: "Fira Code", "JetBrains Mono", "Consolas", monospace;
+}
+
+/* === Status Bar === */
+QWidget#statusBar {
+    background: #1D2029;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    margin: 8px;
+}
+
+QLabel#statusText {
+    font-size: 11px;
+    color: #8B8FA3;
+    font-family: "Fira Code", "JetBrains Mono", "Consolas", monospace;
+}
+
+QLabel#qualityDot {
+    border-radius: 3px;
+    background: #4E5266;
+}
+QLabel#qualityDot[quality="good"] { background: #2DD4BF; }
+QLabel#qualityDot[quality="fair"] { background: #FBBF24; }
+QLabel#qualityDot[quality="poor"] { background: #F87171; }
+
+/* === Scroll Area === */
+QScrollArea#callListScroll {
+    background: transparent;
+}
+QScrollBar:vertical {
+    width: 6px;
+    background: transparent;
+}
+QScrollBar::handle:vertical {
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    min-height: 30px;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
+/* === Placeholder === */
+QLabel#placeholderPage {
+    color: #4E5266;
+    font-size: 16px;
+}

@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+*.spec.bak
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# PJSIP build artifacts
+build/pjsip/
+
+# Logs
+*.log
+
+# Config (user-specific)
+config.ini
+
+# PyInstaller
+*.manifest
+*.pem

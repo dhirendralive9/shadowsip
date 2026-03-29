@@ -1,0 +1,14 @@
+# ShadowSIP Dependencies
+# =====================
+
+# UI Framework
+PySide6>=6.5
+
+# Packaging
+pyinstaller>=6.0
+
+# Phase 1.2+ (uncomment when PJSIP bindings are built)
+# pjsua2  # Built from source, not pip-installable
+
+# Phase 1.3+ (uncomment when adding SQLite ORM)
+# peewee>=3.17
