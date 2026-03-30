@@ -98,6 +98,10 @@ QLabel#statusBadge[status="error"] {
     background: rgba(248,113,113,0.1);
     color: #F87171;
 }
+QLabel#statusBadge[status="mock"] {
+    background: rgba(251,191,36,0.1);
+    color: #FBBF24;
+}
 
 QLabel#accountLabel {
     font-size: 11px;
@@ -414,9 +418,18 @@ QLineEdit, QSpinBox {
     padding: 8px 12px;
     color: #E4E6EB;
     font-size: 13px;
+    min-height: 36px;
 }
 QLineEdit:focus, QSpinBox:focus {
     border-color: #2DD4BF;
+}
+
+QSpinBox {
+    min-width: 120px;
+}
+QSpinBox::up-button, QSpinBox::down-button {
+    width: 20px;
+    border: none;
 }
 
 QComboBox {
@@ -425,10 +438,19 @@ QComboBox {
     border-radius: 8px;
     padding: 8px 12px;
     color: #E4E6EB;
+    font-size: 13px;
+    min-height: 36px;
+    min-width: 120px;
 }
 QComboBox::drop-down {
     border: none;
-    width: 24px;
+    width: 28px;
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+}
+QComboBox::down-arrow {
+    width: 12px;
+    height: 12px;
 }
 QComboBox QAbstractItemView {
     background: #1D2029;
@@ -436,6 +458,7 @@ QComboBox QAbstractItemView {
     color: #E4E6EB;
     selection-background-color: rgba(45,212,191,0.1);
     selection-color: #2DD4BF;
+    padding: 4px;
 }
 
 QCheckBox {

@@ -217,9 +217,10 @@ class SipEngine:
         )
 
         if not PJSIP_AVAILABLE:
-            # Mock mode — simulate registration
-            logger.info(f"MOCK: Registering {sip_account.uri}")
-            sip_account._set_reg_state(RegState.REGISTERED)
+            # Mock mode — do NOT fake registration
+            logger.warning(f"MOCK: Cannot register {sip_account.uri} — pjsua2 not available")
+            logger.warning("Install Python 3.11 and pjsua2 bindings for real SIP registration")
+            sip_account._set_reg_state(RegState.UNREGISTERED)
             self._accounts[account_id] = sip_account
             return sip_account
 

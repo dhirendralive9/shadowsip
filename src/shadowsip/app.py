@@ -82,6 +82,11 @@ class ShadowSIPApp:
         # Start SIP engine + auto-register accounts
         self.account_manager.start()
 
+        # Show mock mode warning if pjsua2 not available
+        if not self.sip_engine.is_available:
+            self.window.topbar.set_registration_status("mock", "pjsua2 not loaded")
+            self.window.statusbar.update_call_info()
+
         logger.info("ShadowSIP started")
 
     def hide_to_tray(self):

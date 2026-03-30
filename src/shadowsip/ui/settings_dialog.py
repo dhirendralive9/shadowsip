@@ -11,10 +11,18 @@ from PySide6.QtWidgets import (
     QFormLayout, QMessageBox, QSizePolicy, QFrame
 )
 from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtGui import QPalette, QColor
 
 from shadowsip.ui.icons import get_icon
 
 logger = logging.getLogger(__name__)
+
+
+def _style_placeholder(widget, color="#999999"):
+    """Set placeholder text color on a QLineEdit."""
+    palette = widget.palette()
+    palette.setColor(QPalette.PlaceholderText, QColor(color))
+    widget.setPalette(palette)
 
 
 class AccountForm(QWidget):
@@ -41,19 +49,25 @@ class AccountForm(QWidget):
 
         # Form
         form = QFormLayout()
-        form.setSpacing(10)
-        form.setLabelAlignment(Qt.AlignRight)
+        form.setSpacing(12)
+        form.setHorizontalSpacing(16)
+        form.setVerticalSpacing(10)
+        form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        form.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
 
         self.display_name = QLineEdit()
         self.display_name.setPlaceholderText("My SIP Account")
+        _style_placeholder(self.display_name)
         form.addRow("Display Name:", self.display_name)
 
         self.sip_user = QLineEdit()
         self.sip_user.setPlaceholderText("2001")
+        _style_placeholder(self.sip_user)
         form.addRow("SIP Username:", self.sip_user)
 
         self.sip_domain = QLineEdit()
         self.sip_domain.setPlaceholderText("pbx.webtobuzz.com")
+        _style_placeholder(self.sip_domain)
         form.addRow("SIP Domain:", self.sip_domain)
 
         # Password with eye toggle
@@ -62,6 +76,7 @@ class AccountForm(QWidget):
         self.sip_password = QLineEdit()
         self.sip_password.setEchoMode(QLineEdit.Password)
         self.sip_password.setPlaceholderText("••••••••")
+        _style_placeholder(self.sip_password)
         pw_layout.addWidget(self.sip_password)
 
         self.eye_btn = QPushButton("👁")
@@ -78,6 +93,7 @@ class AccountForm(QWidget):
 
         self.auth_user = QLineEdit()
         self.auth_user.setPlaceholderText("(same as username if blank)")
+        _style_placeholder(self.auth_user)
         form.addRow("Auth Username:", self.auth_user)
 
         self.transport = QComboBox()
@@ -91,6 +107,7 @@ class AccountForm(QWidget):
 
         self.outbound_proxy = QLineEdit()
         self.outbound_proxy.setPlaceholderText("(optional)")
+        _style_placeholder(self.outbound_proxy)
         form.addRow("Outbound Proxy:", self.outbound_proxy)
 
         layout.addLayout(form)
@@ -252,8 +269,8 @@ class SettingsDialog(QDialog):
         self._config = config
 
         self.setWindowTitle("ShadowSIP Settings")
-        self.setMinimumSize(560, 480)
-        self.resize(600, 520)
+        self.setMinimumSize(680, 580)
+        self.resize(740, 620)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
