@@ -57,16 +57,19 @@ class AccountForm(QWidget):
 
         self.display_name = QLineEdit()
         self.display_name.setPlaceholderText("My SIP Account")
+        self.display_name.setFixedHeight(38)
         _style_placeholder(self.display_name)
         form.addRow("Display Name:", self.display_name)
 
         self.sip_user = QLineEdit()
         self.sip_user.setPlaceholderText("2001")
+        self.sip_user.setFixedHeight(38)
         _style_placeholder(self.sip_user)
         form.addRow("SIP Username:", self.sip_user)
 
         self.sip_domain = QLineEdit()
         self.sip_domain.setPlaceholderText("pbx.webtobuzz.com")
+        self.sip_domain.setFixedHeight(38)
         _style_placeholder(self.sip_domain)
         form.addRow("SIP Domain:", self.sip_domain)
 
@@ -76,6 +79,7 @@ class AccountForm(QWidget):
         self.sip_password = QLineEdit()
         self.sip_password.setEchoMode(QLineEdit.Password)
         self.sip_password.setPlaceholderText("••••••••")
+        self.sip_password.setFixedHeight(38)
         _style_placeholder(self.sip_password)
         pw_layout.addWidget(self.sip_password)
 
@@ -93,20 +97,24 @@ class AccountForm(QWidget):
 
         self.auth_user = QLineEdit()
         self.auth_user.setPlaceholderText("(same as username if blank)")
+        self.auth_user.setFixedHeight(38)
         _style_placeholder(self.auth_user)
         form.addRow("Auth Username:", self.auth_user)
 
         self.transport = QComboBox()
         self.transport.addItems(["UDP", "TCP", "TLS"])
+        self.transport.setFixedHeight(38)
         form.addRow("Transport:", self.transport)
 
         self.port = QSpinBox()
         self.port.setRange(1, 65535)
         self.port.setValue(5060)
+        self.port.setFixedHeight(38)
         form.addRow("Port:", self.port)
 
         self.outbound_proxy = QLineEdit()
         self.outbound_proxy.setPlaceholderText("(optional)")
+        self.outbound_proxy.setFixedHeight(38)
         _style_placeholder(self.outbound_proxy)
         form.addRow("Outbound Proxy:", self.outbound_proxy)
 
@@ -115,9 +123,12 @@ class AccountForm(QWidget):
         # NAT section
         nat_group = QGroupBox("NAT Traversal")
         nat_layout = QFormLayout(nat_group)
+        nat_layout.setVerticalSpacing(10)
+        nat_layout.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
 
         self.stun_server = QLineEdit()
         self.stun_server.setText("stun.l.google.com:19302")
+        self.stun_server.setFixedHeight(38)
         nat_layout.addRow("STUN Server:", self.stun_server)
 
         self.ice_enabled = QCheckBox("Enable ICE")
