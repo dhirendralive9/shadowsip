@@ -130,8 +130,9 @@ jobs:
           EOF
 
           export CFLAGS="-fPIC" CXXFLAGS="-fPIC"
-          ./configure --enable-shared
+          ./configure --enable-shared --prefix=/mingw64
           make dep -j$(nproc) && make -j$(nproc)
+          make install
 
           # === Build pjsua2 SWIG Python bindings ===
           cd pjsip-apps/src/swig
@@ -143,7 +144,7 @@ jobs:
             -o python/pjsua2_wrap.cpp pjsua2.i
           cd python
           python3 setup.py build
-          python3 -m pip install .
+          python3 -m pip install --break-system-packages .
 
           # === Verify pjsua2 loads ===
           python3 -c "import pjsua2; print('SUCCESS: pjsua2 loaded in MSYS2 Python')"
@@ -159,6 +160,9 @@ jobs:
           for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll libssp-0.dll; do
             cp /mingw64/bin/$dll /tmp/pjsua2-dist/ 2>/dev/null || true
           done
+          # Copy PJSIP shared libraries
+          cp /mingw64/bin/libpj*.dll /tmp/pjsua2-dist/ 2>/dev/null || true
+          cp /mingw64/lib/libpj*.dll /tmp/pjsua2-dist/ 2>/dev/null || true
           echo "=== pjsua2 dist ==="
           ls -la /tmp/pjsua2-dist/
 
@@ -168,13 +172,21 @@ jobs:
           # Copy pjsua2 into project source
           cp /tmp/pjsua2-dist/_pjsua2* src/shadowsip/core/ 2>/dev/null || true
           cp /tmp/pjsua2-dist/pjsua2.py src/shadowsip/core/ 2>/dev/null || true
+          # Copy PJSIP shared libs so PyInstaller can find them
+          cp /mingw64/lib/libpjsua2*.dll src/shadowsip/core/ 2>/dev/null || true
+          cp /mingw64/lib/libpj*.dll src/shadowsip/core/ 2>/dev/null || true
 
           # Install ShadowSIP
-          python3 -m pip install -e .
+          python3 -m pip install --break-system-packages -e .
 
           # Run PyInstaller (MSYS2's native pyinstaller)
           pyinstaller shadowsip.spec --noconfirm --clean \
             --distpath=dist --workpath=build
+
+          # Copy PJSIP DLLs into dist folder
+          cp /mingw64/bin/libpj*.dll dist/ShadowSIP/ 2>/dev/null || true
+          cp /mingw64/lib/libpj*.dll dist/ShadowSIP/ 2>/dev/null || true
+          cp /tmp/pjsua2-dist/*.dll dist/ShadowSIP/ 2>/dev/null || true
 
           echo "=== Built app ==="
           ls -la dist/ShadowSIP/ 2>/dev/null || echo "Checking dist..."
