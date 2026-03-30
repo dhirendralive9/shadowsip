@@ -1,444 +1,313 @@
 """
-Settings Dialog — Account management, audio settings, and preferences.
+Settings Dialog — Clean native Qt form, explicitly clears inherited QSS.
 """
-
 import logging
-
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QTabWidget, QWidget,
     QLabel, QLineEdit, QPushButton, QComboBox, QCheckBox,
-    QSpinBox, QListWidget, QListWidgetItem, QGroupBox,
-    QFormLayout, QMessageBox, QSizePolicy, QFrame
+    QSpinBox, QListWidget, QListWidgetItem,
+    QFormLayout, QMessageBox, QFrame
 )
-from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPalette, QColor
-
-from shadowsip.ui.icons import get_icon
 
 logger = logging.getLogger(__name__)
 
 
-def _style_placeholder(widget, color="#999999"):
-    """Set placeholder text color on a QLineEdit."""
-    palette = widget.palette()
-    palette.setColor(QPalette.PlaceholderText, QColor(color))
-    widget.setPalette(palette)
-
-
 class AccountForm(QWidget):
-    """Form for adding/editing a SIP account."""
-
-    saved = Signal(dict)       # Emits account data dict
+    saved = Signal(dict)
     cancelled = Signal()
-    deleted = Signal(int)      # Emits account_id
+    deleted = Signal(int)
 
-    def __init__(self, account_data: dict = None, parent=None):
+    def __init__(self, account_data=None, parent=None):
         super().__init__(parent)
+        # CRITICAL: Clear any inherited stylesheet so native sizing works
+        self.setStyleSheet("")
+
         self._account_id = account_data.get("id") if account_data else None
         self._editing = account_data is not None
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(16)
+        layout.setContentsMargins(4, 0, 4, 0)
 
-        # Title
         title = QLabel("Edit Account" if self._editing else "Add Account")
-        title.setObjectName("formTitle")
-        title.setStyleSheet("font-size: 16px; font-weight: 700;")
+        f = title.font()
+        f.setPointSize(13)
+        f.setBold(True)
+        title.setFont(f)
         layout.addWidget(title)
+        layout.addSpacing(6)
 
-        # Form
+        # Use QFormLayout — the standard Qt way
         form = QFormLayout()
-        form.setSpacing(12)
-        form.setHorizontalSpacing(16)
-        form.setVerticalSpacing(10)
-        form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        form.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
+        form.setRowWrapPolicy(QFormLayout.DontWrapRows)
+        form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        form.setVerticalSpacing(6)
+        form.setHorizontalSpacing(12)
 
         self.display_name = QLineEdit()
         self.display_name.setPlaceholderText("My SIP Account")
-        self.display_name.setFixedHeight(38)
-        _style_placeholder(self.display_name)
         form.addRow("Display Name:", self.display_name)
 
         self.sip_user = QLineEdit()
         self.sip_user.setPlaceholderText("2001")
-        self.sip_user.setFixedHeight(38)
-        _style_placeholder(self.sip_user)
-        form.addRow("SIP Username:", self.sip_user)
+        form.addRow("Username:", self.sip_user)
 
         self.sip_domain = QLineEdit()
         self.sip_domain.setPlaceholderText("pbx.webtobuzz.com")
-        self.sip_domain.setFixedHeight(38)
-        _style_placeholder(self.sip_domain)
-        form.addRow("SIP Domain:", self.sip_domain)
+        form.addRow("Server:", self.sip_domain)
 
-        # Password with eye toggle
-        pw_layout = QHBoxLayout()
-        pw_layout.setSpacing(4)
+        # Password with eye button
+        pw_w = QWidget()
+        pw_w.setStyleSheet("")
+        pw_l = QHBoxLayout(pw_w)
+        pw_l.setContentsMargins(0, 0, 0, 0)
+        pw_l.setSpacing(2)
         self.sip_password = QLineEdit()
         self.sip_password.setEchoMode(QLineEdit.Password)
-        self.sip_password.setPlaceholderText("••••••••")
-        self.sip_password.setFixedHeight(38)
-        _style_placeholder(self.sip_password)
-        pw_layout.addWidget(self.sip_password)
-
-        self.eye_btn = QPushButton("👁")
-        self.eye_btn.setObjectName("eyeButton")
-        self.eye_btn.setFixedSize(32, 32)
-        self.eye_btn.setCursor(Qt.PointingHandCursor)
-        self.eye_btn.setToolTip("Show/hide password")
-        self.eye_btn.clicked.connect(self._toggle_password)
-        pw_layout.addWidget(self.eye_btn)
-
-        pw_widget = QWidget()
-        pw_widget.setLayout(pw_layout)
-        form.addRow("Password:", pw_widget)
+        self.sip_password.setPlaceholderText("Enter password")
+        pw_l.addWidget(self.sip_password)
+        self.eye_btn = QPushButton("Show")
+        self.eye_btn.setFixedWidth(50)
+        self.eye_btn.clicked.connect(self._toggle_pw)
+        pw_l.addWidget(self.eye_btn)
+        form.addRow("Password:", pw_w)
 
         self.auth_user = QLineEdit()
-        self.auth_user.setPlaceholderText("(same as username if blank)")
-        self.auth_user.setFixedHeight(38)
-        _style_placeholder(self.auth_user)
-        form.addRow("Auth Username:", self.auth_user)
+        self.auth_user.setPlaceholderText("(same as username)")
+        form.addRow("Auth User:", self.auth_user)
 
         self.transport = QComboBox()
         self.transport.addItems(["UDP", "TCP", "TLS"])
-        self.transport.setFixedHeight(38)
         form.addRow("Transport:", self.transport)
 
         self.port = QSpinBox()
         self.port.setRange(1, 65535)
         self.port.setValue(5060)
-        self.port.setFixedHeight(38)
         form.addRow("Port:", self.port)
 
         self.outbound_proxy = QLineEdit()
         self.outbound_proxy.setPlaceholderText("(optional)")
-        self.outbound_proxy.setFixedHeight(38)
-        _style_placeholder(self.outbound_proxy)
-        form.addRow("Outbound Proxy:", self.outbound_proxy)
-
-        layout.addLayout(form)
-
-        # NAT section
-        nat_group = QGroupBox("NAT Traversal")
-        nat_layout = QFormLayout(nat_group)
-        nat_layout.setVerticalSpacing(10)
-        nat_layout.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        form.addRow("Proxy:", self.outbound_proxy)
 
         self.stun_server = QLineEdit()
         self.stun_server.setText("stun.l.google.com:19302")
-        self.stun_server.setFixedHeight(38)
-        nat_layout.addRow("STUN Server:", self.stun_server)
+        form.addRow("STUN:", self.stun_server)
 
-        self.ice_enabled = QCheckBox("Enable ICE")
+        layout.addLayout(form)
+        layout.addSpacing(4)
+
+        # Checkboxes
+        cb = QHBoxLayout()
+        self.ice_enabled = QCheckBox("ICE")
         self.ice_enabled.setChecked(True)
-        nat_layout.addRow("", self.ice_enabled)
-
-        self.srtp_enabled = QCheckBox("Enable SRTP (encryption)")
-        nat_layout.addRow("", self.srtp_enabled)
-
-        layout.addWidget(nat_group)
-
-        # Options
-        options_layout = QHBoxLayout()
-        self.register_startup = QCheckBox("Register on startup")
+        cb.addWidget(self.ice_enabled)
+        self.srtp_enabled = QCheckBox("SRTP")
+        cb.addWidget(self.srtp_enabled)
+        self.register_startup = QCheckBox("Auto-register")
         self.register_startup.setChecked(True)
-        options_layout.addWidget(self.register_startup)
-
-        self.is_default = QCheckBox("Default account")
-        options_layout.addWidget(self.is_default)
-        options_layout.addStretch()
-        layout.addLayout(options_layout)
+        cb.addWidget(self.register_startup)
+        self.is_default = QCheckBox("Default")
+        cb.addWidget(self.is_default)
+        cb.addStretch()
+        layout.addLayout(cb)
 
         layout.addStretch()
 
         # Buttons
-        btn_layout = QHBoxLayout()
-        btn_layout.setSpacing(8)
-
+        btns = QHBoxLayout()
         if self._editing:
-            self.delete_btn = QPushButton("Delete Account")
-            self.delete_btn.setObjectName("dangerButton")
-            self.delete_btn.setStyleSheet(
-                "QPushButton { color: #D94040; border: 1px solid rgba(217,64,64,0.3); "
-                "border-radius: 8px; padding: 8px 16px; } "
-                "QPushButton:hover { background: rgba(217,64,64,0.1); }")
-            self.delete_btn.clicked.connect(self._on_delete)
-            btn_layout.addWidget(self.delete_btn)
+            d = QPushButton("Delete")
+            d.clicked.connect(self._on_delete)
+            btns.addWidget(d)
+        btns.addStretch()
+        c = QPushButton("Cancel")
+        c.clicked.connect(self.cancelled.emit)
+        btns.addWidget(c)
+        s = QPushButton("Save & Register" if not self._editing else "Save")
+        s.setDefault(True)
+        s.clicked.connect(self._on_save)
+        btns.addWidget(s)
+        layout.addLayout(btns)
 
-        btn_layout.addStretch()
-
-        self.cancel_btn = QPushButton("Cancel")
-        self.cancel_btn.setStyleSheet(
-            "QPushButton { border: 1px solid rgba(0,0,0,0.1); "
-            "border-radius: 8px; padding: 8px 20px; } "
-            "QPushButton:hover { background: rgba(0,0,0,0.05); }")
-        self.cancel_btn.clicked.connect(self.cancelled.emit)
-        btn_layout.addWidget(self.cancel_btn)
-
-        self.save_btn = QPushButton("Save & Register" if not self._editing else "Save")
-        self.save_btn.setStyleSheet(
-            "QPushButton { background: #0D7C5F; color: white; border: none; "
-            "border-radius: 8px; padding: 8px 24px; font-weight: 600; } "
-            "QPushButton:hover { background: #0A6B51; }")
-        self.save_btn.clicked.connect(self._on_save)
-        btn_layout.addWidget(self.save_btn)
-
-        layout.addLayout(btn_layout)
-
-        # Populate if editing
         if account_data:
             self._populate(account_data)
 
-    def _toggle_password(self):
-        """Toggle password visibility."""
+    def _toggle_pw(self):
         if self.sip_password.echoMode() == QLineEdit.Password:
             self.sip_password.setEchoMode(QLineEdit.Normal)
-            self.eye_btn.setText("🔒")
-            self.eye_btn.setToolTip("Hide password")
+            self.eye_btn.setText("Hide")
         else:
             self.sip_password.setEchoMode(QLineEdit.Password)
-            self.eye_btn.setText("👁")
-            self.eye_btn.setToolTip("Show password")
+            self.eye_btn.setText("Show")
 
-    def _populate(self, data: dict):
-        """Fill form from account data."""
-        self.display_name.setText(data.get("display_name", ""))
-        self.sip_user.setText(data.get("sip_user", ""))
-        self.sip_domain.setText(data.get("sip_domain", ""))
-        self.sip_password.setText(data.get("sip_password", ""))
-        self.auth_user.setText(data.get("auth_user", ""))
-        self.outbound_proxy.setText(data.get("outbound_proxy", ""))
-        self.stun_server.setText(data.get("stun_server", "stun.l.google.com:19302"))
-        self.port.setValue(data.get("port", 5060))
-        self.ice_enabled.setChecked(bool(data.get("ice_enabled", 1)))
-        self.srtp_enabled.setChecked(bool(data.get("srtp_enabled", 0)))
-        self.register_startup.setChecked(bool(data.get("register_on_startup", 1)))
-        self.is_default.setChecked(bool(data.get("is_default", 0)))
-
-        transport = data.get("transport", "UDP").upper()
-        idx = self.transport.findText(transport)
+    def _populate(self, d):
+        self.display_name.setText(d.get("display_name", ""))
+        self.sip_user.setText(d.get("sip_user", ""))
+        self.sip_domain.setText(d.get("sip_domain", ""))
+        self.sip_password.setText(d.get("sip_password", ""))
+        self.auth_user.setText(d.get("auth_user", ""))
+        self.outbound_proxy.setText(d.get("outbound_proxy", ""))
+        self.stun_server.setText(d.get("stun_server", "stun.l.google.com:19302"))
+        self.port.setValue(d.get("port", 5060))
+        self.ice_enabled.setChecked(bool(d.get("ice_enabled", 1)))
+        self.srtp_enabled.setChecked(bool(d.get("srtp_enabled", 0)))
+        self.register_startup.setChecked(bool(d.get("register_on_startup", 1)))
+        self.is_default.setChecked(bool(d.get("is_default", 0)))
+        idx = self.transport.findText(d.get("transport", "UDP").upper())
         if idx >= 0:
             self.transport.setCurrentIndex(idx)
 
     def _on_save(self):
-        """Validate and emit save signal."""
         user = self.sip_user.text().strip()
         domain = self.sip_domain.text().strip()
-
         if not user:
-            QMessageBox.warning(self, "Validation", "SIP Username is required.")
-            self.sip_user.setFocus()
+            QMessageBox.warning(self, "Required", "Username is required.")
             return
         if not domain:
-            QMessageBox.warning(self, "Validation", "SIP Domain is required.")
-            self.sip_domain.setFocus()
+            QMessageBox.warning(self, "Required", "Server is required.")
             return
-
-        data = {
-            "display_name": self.display_name.text().strip(),
-            "sip_user": user,
-            "sip_domain": domain,
-            "sip_password": self.sip_password.text(),
-            "auth_user": self.auth_user.text().strip(),
-            "transport": self.transport.currentText(),
-            "port": self.port.value(),
-            "outbound_proxy": self.outbound_proxy.text().strip(),
-            "stun_server": self.stun_server.text().strip(),
-            "ice_enabled": self.ice_enabled.isChecked(),
-            "srtp_enabled": self.srtp_enabled.isChecked(),
-            "register_on_startup": self.register_startup.isChecked(),
-            "is_default": self.is_default.isChecked(),
-        }
-
+        data = dict(
+            display_name=self.display_name.text().strip(),
+            sip_user=user, sip_domain=domain,
+            sip_password=self.sip_password.text(),
+            auth_user=self.auth_user.text().strip(),
+            transport=self.transport.currentText(),
+            port=self.port.value(),
+            outbound_proxy=self.outbound_proxy.text().strip(),
+            stun_server=self.stun_server.text().strip(),
+            ice_enabled=self.ice_enabled.isChecked(),
+            srtp_enabled=self.srtp_enabled.isChecked(),
+            register_on_startup=self.register_startup.isChecked(),
+            is_default=self.is_default.isChecked(),
+        )
         if self._account_id is not None:
             data["id"] = self._account_id
-
         self.saved.emit(data)
 
     def _on_delete(self):
-        """Confirm and emit delete signal."""
-        reply = QMessageBox.question(
-            self, "Delete Account",
-            f"Delete account {self.sip_user.text()}@{self.sip_domain.text()}?\n\n"
-            "This will unregister and remove the account.",
-            QMessageBox.Yes | QMessageBox.No
-        )
-        if reply == QMessageBox.Yes and self._account_id is not None:
-            self.deleted.emit(self._account_id)
+        if QMessageBox.question(self, "Delete",
+            f"Delete {self.sip_user.text()}@{self.sip_domain.text()}?",
+            QMessageBox.Yes | QMessageBox.No) == QMessageBox.Yes:
+            if self._account_id is not None:
+                self.deleted.emit(self._account_id)
 
 
 class SettingsDialog(QDialog):
-    """Settings dialog with tabs for Accounts, Audio, and General."""
-
-    account_action = Signal(str, dict)  # action ("add"/"update"/"delete"), data
-
     def __init__(self, account_manager, config, parent=None):
         super().__init__(parent)
-        self._account_manager = account_manager
-        self._config = config
-
+        # Clear inherited stylesheet for this dialog
+        self.setStyleSheet("")
+        self._am = account_manager
         self.setWindowTitle("ShadowSIP Settings")
-        self.setMinimumSize(680, 580)
-        self.resize(740, 620)
+        self.resize(620, 480)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        # Tabs
-        self.tabs = QTabWidget()
-        self.tabs.setDocumentMode(True)
+        tabs = QTabWidget()
 
         # Accounts tab
-        self.accounts_tab = self._build_accounts_tab()
-        self.tabs.addTab(self.accounts_tab, "Accounts")
+        tabs.addTab(self._build_accounts(), "Accounts")
 
-        # Audio tab (placeholder for Phase 1.3)
-        audio_tab = QLabel("Audio device settings will be available\nwhen PJSIP is connected.")
-        audio_tab.setAlignment(Qt.AlignCenter)
-        self.tabs.addTab(audio_tab, "Audio")
+        # Placeholder tabs
+        a = QLabel("Audio settings — requires PJSIP.")
+        a.setAlignment(Qt.AlignCenter)
+        tabs.addTab(a, "Audio")
+        g = QLabel("General preferences — coming soon.")
+        g.setAlignment(Qt.AlignCenter)
+        tabs.addTab(g, "General")
 
-        # General tab
-        general_tab = QLabel("General preferences coming soon.")
-        general_tab.setAlignment(Qt.AlignCenter)
-        self.tabs.addTab(general_tab, "General")
+        layout.addWidget(tabs)
 
-        layout.addWidget(self.tabs)
+    def _build_accounts(self):
+        w = QWidget()
+        w.setStyleSheet("")
+        h = QHBoxLayout(w)
+        h.setContentsMargins(10, 10, 10, 10)
+        h.setSpacing(10)
 
-    def _build_accounts_tab(self) -> QWidget:
-        """Build the accounts management tab."""
-        widget = QWidget()
-        layout = QHBoxLayout(widget)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(16)
-
-        # Left: Account list
+        # Left panel
         left = QVBoxLayout()
-        left.setSpacing(8)
-
-        list_header = QHBoxLayout()
-        list_label = QLabel("SIP Accounts")
-        list_label.setStyleSheet("font-weight: 600; font-size: 14px;")
-        list_header.addWidget(list_label)
-        list_header.addStretch()
-
-        self.add_btn = QPushButton("+ Add")
-        self.add_btn.setStyleSheet(
-            "QPushButton { background: #0D7C5F; color: white; border: none; "
-            "border-radius: 6px; padding: 6px 14px; font-weight: 600; font-size: 12px; } "
-            "QPushButton:hover { background: #0A6B51; }")
-        self.add_btn.setCursor(Qt.PointingHandCursor)
-        self.add_btn.clicked.connect(self._show_add_form)
-        list_header.addWidget(self.add_btn)
-        left.addLayout(list_header)
+        hdr = QHBoxLayout()
+        hdr.addWidget(QLabel("<b>Accounts</b>"))
+        hdr.addStretch()
+        ab = QPushButton("+ Add")
+        ab.clicked.connect(self._show_add)
+        hdr.addWidget(ab)
+        left.addLayout(hdr)
 
         self.account_list = QListWidget()
         self.account_list.setFixedWidth(200)
-        self.account_list.currentRowChanged.connect(self._on_account_selected)
+        self.account_list.currentRowChanged.connect(self._on_select)
         left.addWidget(self.account_list)
-        layout.addLayout(left)
+        h.addLayout(left)
 
-        # Separator
         sep = QFrame()
         sep.setFrameShape(QFrame.VLine)
-        sep.setFixedWidth(1)
-        layout.addWidget(sep)
+        h.addWidget(sep)
 
-        # Right: Form area (stacked)
-        self.form_area = QVBoxLayout()
-        self._current_form = None
+        self._form_box = QVBoxLayout()
+        self._form = None
+        self._ph = QLabel("Select an account or add new.")
+        self._ph.setAlignment(Qt.AlignCenter)
+        self._form_box.addWidget(self._ph)
+        h.addLayout(self._form_box, stretch=1)
 
-        # Placeholder
-        self._placeholder = QLabel("Select an account or add a new one.")
-        self._placeholder.setAlignment(Qt.AlignCenter)
-        self._placeholder.setStyleSheet("color: #9E9E9E; font-size: 14px;")
-        self.form_area.addWidget(self._placeholder)
+        self._refresh()
+        return w
 
-        layout.addLayout(self.form_area, stretch=1)
-
-        # Load accounts
-        self._refresh_account_list()
-
-        return widget
-
-    def _refresh_account_list(self):
-        """Reload account list from database."""
+    def _refresh(self):
         self.account_list.clear()
-        accounts = self._account_manager.get_all_accounts()
+        for a in self._am.get_all_accounts():
+            st = self._am.get_reg_state(a["id"])
+            dot = "●" if st == "registered" else "○"
+            star = " ★" if a.get("is_default") else ""
+            it = QListWidgetItem(f"{dot} {a['sip_user']}@{a['sip_domain']}{star}")
+            it.setData(Qt.UserRole, a["id"])
+            self.account_list.addItem(it)
 
-        for acc in accounts:
-            state = self._account_manager.get_reg_state(acc["id"])
-            status_icon = "● " if state == "registered" else "○ "
-            label = f"{status_icon}{acc['sip_user']}@{acc['sip_domain']}"
-            if acc.get("is_default"):
-                label += " ★"
+    def _on_select(self, row):
+        it = self.account_list.item(row)
+        if it:
+            d = self._am.get_account(it.data(Qt.UserRole))
+            if d:
+                self._show_form(d)
 
-            item = QListWidgetItem(label)
-            item.setData(Qt.UserRole, acc["id"])
-            self.account_list.addItem(item)
+    def _show_add(self):
+        self._show_form(None)
 
-    def _on_account_selected(self, row: int):
-        """Show edit form for selected account."""
-        item = self.account_list.item(row)
-        if not item:
-            return
-        account_id = item.data(Qt.UserRole)
-        account_data = self._account_manager.get_account(account_id)
-        if account_data:
-            self._show_edit_form(account_data)
+    def _show_form(self, data):
+        self._clear()
+        f = AccountForm(account_data=data)
+        f.saved.connect(self._on_saved)
+        f.cancelled.connect(self._show_ph)
+        f.deleted.connect(self._on_deleted)
+        self._form_box.addWidget(f)
+        self._form = f
 
-    def _show_add_form(self):
-        """Show blank form for adding a new account."""
-        self._clear_form_area()
-        form = AccountForm()
-        form.saved.connect(self._on_account_saved)
-        form.cancelled.connect(self._show_placeholder)
-        self.form_area.addWidget(form)
-        self._current_form = form
+    def _show_ph(self):
+        self._clear()
+        self._form_box.addWidget(self._ph)
+        self._ph.show()
 
-    def _show_edit_form(self, account_data: dict):
-        """Show form for editing an existing account."""
-        self._clear_form_area()
-        form = AccountForm(account_data=account_data)
-        form.saved.connect(self._on_account_saved)
-        form.cancelled.connect(self._show_placeholder)
-        form.deleted.connect(self._on_account_deleted)
-        self.form_area.addWidget(form)
-        self._current_form = form
+    def _clear(self):
+        if self._form:
+            self._form.setParent(None)
+            self._form.deleteLater()
+            self._form = None
+        self._ph.hide()
 
-    def _show_placeholder(self):
-        """Show placeholder text in form area."""
-        self._clear_form_area()
-        self.form_area.addWidget(self._placeholder)
-        self._placeholder.show()
-
-    def _clear_form_area(self):
-        """Remove current form from layout."""
-        if self._current_form:
-            self._current_form.setParent(None)
-            self._current_form.deleteLater()
-            self._current_form = None
-        self._placeholder.hide()
-
-    def _on_account_saved(self, data: dict):
-        """Handle account save from form."""
-        account_id = data.pop("id", None)
-
-        if account_id is not None:
-            # Update existing
-            self._account_manager.update_account(account_id, **data)
-            logger.info(f"Account updated: {data['sip_user']}@{data['sip_domain']}")
+    def _on_saved(self, data):
+        aid = data.pop("id", None)
+        if aid is not None:
+            self._am.update_account(aid, **data)
         else:
-            # Add new
-            account_id = self._account_manager.add_account(**data)
-            logger.info(f"Account added: {data['sip_user']}@{data['sip_domain']}")
+            self._am.add_account(**data)
+        self._refresh()
+        self._show_ph()
 
-        self._refresh_account_list()
-        self._show_placeholder()
-
-    def _on_account_deleted(self, account_id: int):
-        """Handle account deletion."""
-        self._account_manager.delete_account(account_id)
-        self._refresh_account_list()
-        self._show_placeholder()
+    def _on_deleted(self, aid):
+        self._am.delete_account(aid)
+        self._refresh()
+        self._show_ph()

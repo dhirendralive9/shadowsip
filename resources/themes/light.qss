@@ -413,18 +413,14 @@ QLineEdit, QSpinBox {
     background: #F8F7F4;
     border: 1px solid rgba(0,0,0,0.1);
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 6px 10px;
     color: #1A1A1A;
     font-size: 13px;
-    min-height: 36px;
 }
 QLineEdit:focus, QSpinBox:focus {
     border-color: #0D7C5F;
 }
 
-QSpinBox {
-    min-width: 120px;
-}
 QSpinBox::up-button, QSpinBox::down-button {
     width: 20px;
     border: none;
@@ -434,11 +430,9 @@ QComboBox {
     background: #F8F7F4;
     border: 1px solid rgba(0,0,0,0.1);
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 6px 10px;
     color: #1A1A1A;
     font-size: 13px;
-    min-height: 36px;
-    min-width: 120px;
 }
 QComboBox::drop-down {
     border: none;
