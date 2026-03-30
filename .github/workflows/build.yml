@@ -104,7 +104,7 @@ jobs:
             mingw-w64-x86_64-python
             mingw-w64-x86_64-python-pip
             mingw-w64-x86_64-python-setuptools
-            mingw-w64-x86_64-python-pyside6
+            mingw-w64-x86_64-pyside6
             mingw-w64-x86_64-pyinstaller
             mingw-w64-x86_64-swig
             make
